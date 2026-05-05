@@ -430,6 +430,22 @@ jobs:
           echo "build_tag=${build_tag}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
 
+     - name: Compile custom DTS and place for packaging
+  if: ${{ steps.down.outputs.status == 'success' && !cancelled() }}
+  run: |
+    # 安装设备树编译器
+    sudo apt install -y device-tree-compiler
+
+    # 编译你的 DTS 文件为 DTB（请根据实际路径调整）
+    dtc -I dts -O dtb \
+      -o ${{ github.workspace }}/make-fnnas/fnnas-files/different-files/${{ inputs.fnnas_board }}/boot/dtb/rockchip/rk3568-dg-tn3568-final.dtb \
+      ${{ github.workspace }}/make-fnnas/dts/rk3568-dg-tn3568-final.dts
+
+    # 可选：强制指定引导设备树（如果需要覆盖默认配置）
+    # 注意：不同设备 uEnv.txt 的位置可能不同，请确认后取消注释
+    # echo "FDT=/dtb/rockchip/rk3568-dg-tn3568-final.dtb" > /tmp/uEnv.txt
+    # 如果 different-files 中已有 boot/uEnv.txt，你也可以直接替换
+    
       - name: Package FnNAS for target boards
         if: ${{ steps.down.outputs.status == 'success' && !cancelled() }}
         uses: ophub/fnnas@main
